@@ -1,6 +1,6 @@
 {
   "name": "mcp-server-reddit-ads",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for the Reddit Ads API v3 - working write operations, tiered safety controls, built-in OAuth setup",
   "type": "module",
   "license": "MIT",

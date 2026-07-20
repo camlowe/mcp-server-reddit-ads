@@ -8,6 +8,11 @@ type Entity = Record<string, unknown>;
 const single = (res: unknown) => withUsdFields((res as { data: Entity }).data);
 const many = (res: unknown) => ((res as { data: Entity[] }).data ?? []).map(withUsdFields);
 
+const STATUS = z.enum(["ACTIVE", "PAUSED", "ARCHIVED"]);
+const statusDesc = "Client-side filter on configured_status.";
+const byStatus = (items: Entity[], status?: string) =>
+  status ? items.filter((e) => e.configured_status === status) : items;
+
 export function registerEntityTools(server: McpServer, ctx: ToolContext): string[] {
   server.registerTool(
     "get_campaigns",
@@ -16,9 +21,11 @@ export function registerEntityTools(server: McpServer, ctx: ToolContext): string
         "List all campaigns in a Reddit ad account, with budget fields converted to USD (*_usd siblings).",
       inputSchema: {
         account_id: z.string().optional().describe("Ad account id (a2_...). Falls back to REDDIT_ADS_ACCOUNT_ID."),
+        status: STATUS.optional().describe(statusDesc),
       },
     },
-    async ({ account_id }) => jsonResult(many(await ctx.client.listCampaigns(requireAccount(ctx, account_id))))
+    async ({ account_id, status }) =>
+      jsonResult(byStatus(many(await ctx.client.listCampaigns(requireAccount(ctx, account_id))), status))
   );
 
   server.registerTool(
@@ -37,10 +44,11 @@ export function registerEntityTools(server: McpServer, ctx: ToolContext): string
       inputSchema: {
         account_id: z.string().optional().describe("Ad account id. Falls back to REDDIT_ADS_ACCOUNT_ID."),
         campaign_id: z.string().optional().describe("Only return ad groups in this campaign."),
+        status: STATUS.optional().describe(statusDesc),
       },
     },
-    async ({ account_id, campaign_id }) =>
-      jsonResult(many(await ctx.client.listAdGroups(requireAccount(ctx, account_id), campaign_id)))
+    async ({ account_id, campaign_id, status }) =>
+      jsonResult(byStatus(many(await ctx.client.listAdGroups(requireAccount(ctx, account_id), campaign_id)), status))
   );
 
   server.registerTool(
@@ -59,10 +67,11 @@ export function registerEntityTools(server: McpServer, ctx: ToolContext): string
       inputSchema: {
         account_id: z.string().optional().describe("Ad account id. Falls back to REDDIT_ADS_ACCOUNT_ID."),
         ad_group_id: z.string().optional().describe("Only return ads in this ad group."),
+        status: STATUS.optional().describe(statusDesc),
       },
     },
-    async ({ account_id, ad_group_id }) =>
-      jsonResult(many(await ctx.client.listAds(requireAccount(ctx, account_id), ad_group_id)))
+    async ({ account_id, ad_group_id, status }) =>
+      jsonResult(byStatus(many(await ctx.client.listAds(requireAccount(ctx, account_id), ad_group_id)), status))
   );
 
   server.registerTool(

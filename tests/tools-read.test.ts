@@ -117,6 +117,31 @@ describe("read tools", () => {
     expect(typeof out.spend.last_7_days.spend_usd).toBe("number");
   });
 
+  it("list tools filter client-side on configured_status when status is given", async () => {
+    const { client, handlers } = setup({ defaultAccountId: "a2_def" });
+    client.listCampaigns.mockResolvedValue({
+      data: [
+        { id: "c1", configured_status: "ACTIVE" },
+        { id: "c2", configured_status: "PAUSED" },
+      ],
+      truncated: false,
+    });
+    const out = parse(await handlers.get("get_campaigns")!({ status: "PAUSED" }));
+    expect(out).toHaveLength(1);
+    expect(out[0].id).toBe("c2");
+
+    client.listAds.mockResolvedValue({
+      data: [
+        { id: "a1", configured_status: "ACTIVE" },
+        { id: "a2", configured_status: "ACTIVE" },
+        { id: "a3", configured_status: "PAUSED" },
+      ],
+      truncated: false,
+    });
+    const ads = parse(await handlers.get("get_ads")!({ status: "ACTIVE" }));
+    expect(ads.map((a: { id: string }) => a.id)).toEqual(["a1", "a2"]);
+  });
+
   it("targeting tools pass the query through", async () => {
     const { client, handlers } = setup();
     await handlers.get("search_subreddits")!({ query: "gaming" });

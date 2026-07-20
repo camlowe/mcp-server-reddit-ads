@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 (2026-07-20)
+
+- Tools above the configured write tier are no longer registered at all: read-only sessions expose 13 tools instead of 23 refusing ones. The call-time gate remains as defense-in-depth.
+- Tool results are capped at 200,000 characters with a note suggesting how to narrow the query.
+- `get_campaigns`, `get_ad_groups`, and `get_ads` accept an optional `status` filter (`ACTIVE` / `PAUSED` / `ARCHIVED`) on `configured_status`.
+- Startup banner reports how many tools are hidden by the current tier.
+
 ## 0.1.0 (2026-07-20)
 
 Initial release.

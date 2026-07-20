@@ -24,6 +24,16 @@ export function requireAccount(ctx: ToolContext, accountId?: string): string {
   return id;
 }
 
+/** Hard cap on a single tool result, to stay well inside MCP message limits. */
+export const MAX_TOOL_OUTPUT_CHARS = 200_000;
+
 export function jsonResult(data: unknown): ToolResult {
-  return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }] };
+  // JSON.stringify(undefined) returns undefined, not a string.
+  let text = JSON.stringify(data, null, 2) ?? "null";
+  if (text.length > MAX_TOOL_OUTPUT_CHARS) {
+    text =
+      text.slice(0, MAX_TOOL_OUTPUT_CHARS) +
+      `\n\n[Output truncated at ${MAX_TOOL_OUTPUT_CHARS} characters. Narrow the query - fewer items, a shorter date range, or fewer metrics - to get complete JSON.]`;
+  }
+  return { content: [{ type: "text", text }] };
 }

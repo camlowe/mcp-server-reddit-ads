@@ -98,6 +98,8 @@ A fresh install cannot pause, create, or edit anything. To allow changes, raise 
 
 Writes are off by default. `REDDIT_ADS_WRITE_TIER` opens them in two steps, so an accident at the read or safe tier cannot start spending money.
 
+Tools above the configured tier are not just refused - they are hidden from the client's tool list entirely. A read-only session exposes 13 tools; the model cannot even attempt `update_budget` because it does not know the tool exists. If a hidden tool is somehow called anyway, the server refuses it with an error naming the tier that would unlock it.
+
 | Tier | What it allows | Rule |
 |---|---|---|
 | `read` (default) | No writes. | Reads only. |
@@ -129,6 +131,8 @@ Writes are off by default. `REDDIT_ADS_WRITE_TIER` opens them in two steps, so a
 
 Notes:
 
+- `get_campaigns`, `get_ad_groups`, and `get_ads` take an optional `status` filter (`ACTIVE`, `PAUSED`, or `ARCHIVED`), applied client-side on `configured_status`.
+- Tool results are capped at 200,000 characters; a truncated result says so and suggests narrowing the query.
 - `get_performance_report` takes friendly lowercase metric names (`impressions`, `clicks`, `spend`, `cpc`, `conversion_page_visit_clicks`, and so on) and validates them locally before the call, suggesting the closest match on a typo.
 - `create_ad_group` requires a `conversion_pixel_id`, and `create_campaign` requires one when campaign budget optimization is on (a Reddit mandate since 2026-07-13). The pixel id is in the Reddit Ads dashboard under Events Manager; in observed data it equals the ad account id.
 - `copy_ads` duplicates ads into another ad group (Reddit creates a duplicate promoted post per copy) with an option to rewrite `utm_campaign` and other click-URL query params.
