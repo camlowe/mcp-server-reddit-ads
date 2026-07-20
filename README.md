@@ -10,15 +10,29 @@ A Reddit Ads API v3 MCP server with working write operations and tiered safety c
 
 ## Getting started
 
-Setup is a one-time process and takes about five minutes. A fresh install is read-only: it cannot change anything in your account until you deliberately turn writes on in step 5.
+There are two ways to set it up. Either way, a fresh install is read-only and cannot change anything in your account until you deliberately turn on writes (the last step).
 
-### 1. Register a Reddit app
+### Simple setup (Claude Code)
+
+If you use Claude Code, let it do the mechanical work. Point it at this repository and ask, for example:
+
+> Set up the mcp-server-reddit-ads MCP server from https://github.com/camlowe/mcp-server-reddit-ads for me, read-only. Walk me through registering the Reddit app, run the `auth` command, and add the server to my MCP config.
+
+Claude reads this README, tells you exactly what to do for the parts only you can do, runs `npx mcp-server-reddit-ads auth`, writes your `.mcp.json`, and confirms the server loads. Later, when you want to make changes, just ask it to raise the write tier.
+
+You still register the Reddit app (step 1 below) and approve the browser login yourself - those cannot be automated.
+
+### Advanced setup (manual)
+
+The full process, for other MCP clients or if you prefer to do it by hand. It takes about five minutes.
+
+#### 1. Register a Reddit app
 
 In the Reddit Ads dashboard, go to **Business settings > Developer Applications > Create App**. Give it a name, set the **redirect URI** to exactly `http://localhost:8080`, and choose a primary contact (a business admin). Save it, then copy the **client ID** and **client secret** it shows you - you need both in the next step.
 
 Do not use reddit.com/prefs/apps: it silently rejects new apps under the Responsible Builder Policy, so the Ads developer portal is the only working path for advertisers.
 
-### 2. Mint a refresh token
+#### 2. Mint a refresh token
 
 Run the built-in setup helper:
 
@@ -30,7 +44,7 @@ It asks for the client ID and secret from step 1 (or reads them from `REDDIT_CLI
 
 If it fails, it tells you how to fix the two common causes: port 8080 already in use, and a redirect-URI mismatch (the app's redirect URI must be exactly `http://localhost:8080`).
 
-### 3. Add the server to your MCP client
+#### 3. Add the server to your MCP client
 
 Paste the block from step 2 into your client's `.mcp.json`. It has this shape, with the three credential values already populated by the `auth` command:
 
@@ -62,11 +76,11 @@ claude mcp add reddit-ads \
   -- npx -y mcp-server-reddit-ads
 ```
 
-### 4. Restart and verify
+#### 4. Restart and verify
 
 Restart your client so it picks up the server (in Claude Code, approve the server when prompted, and confirm it loaded with `/mcp`). Then ask it to **list your Reddit ad accounts**. You should see your account id (`a2_...`). If you manage a single account, set `REDDIT_ADS_ACCOUNT_ID` to that id in the config and restart, so you never have to name the account in a request again.
 
-### 5. Try some read-only queries
+#### 5. Try some read-only queries
 
 You are connected and read-only. Good first questions:
 
@@ -76,7 +90,7 @@ You are connected and read-only. Good first questions:
 
 Most people stay here day to day. When you want to make changes, turn on writes.
 
-### 6. Turn on writes when you need them
+#### 6. Turn on writes when you need them
 
 A fresh install cannot pause, create, or edit anything. To allow changes, raise `REDDIT_ADS_WRITE_TIER` in your config and restart. Start with `safe` (nothing at that level can start or grow spend) and move to `spend` only when you intend to resume delivery or change budgets, bids, or targeting. See [Write tiers](#write-tiers) for exactly what each level unlocks.
 
