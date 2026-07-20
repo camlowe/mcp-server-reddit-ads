@@ -87,8 +87,8 @@ The client encodes behaviors verified against the live API. The two that cause t
 - **Updates use `PATCH`, never `PUT`, and Reddit returns 404 (not 405) for the wrong verb.** A verb bug looks exactly like a missing resource. This is the bug that breaks every write in the upstream package.
 - **Single resources live on bare paths (`/ads/{id}`); collections and creates use account-scoped paths (`/ad_accounts/{id}/ads`).** Mixing them returns 404.
 - **All money values are microcurrency (one millionth of the currency unit).** This server converts them to USD on read and back on write, so tool inputs and outputs are in dollars.
-
-Full details, including the reporting-metric enum quirks and status semantics, are in [docs/api-notes.md](docs/api-notes.md).
+- **Report metric names are UPPERCASE enums in requests but lowercase in responses, with inconsistent spelling** (`CONVERSION_SIGN_UP_CLICKS` vs `CONVERSION_SIGNUP_TOTAL_VALUE`). Use the friendly lowercase names; the server validates and maps them.
+- **After a write, trust `configured_status`, not `effective_status`.** The configured value updates immediately; the effective value can lag by minutes.
 
 ## Development
 
