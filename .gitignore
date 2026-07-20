@@ -1,9 +1,13 @@
 .DS_Store
 node_modules/
 dist/
-.env
+.env*
 .mcp.json
+.npmrc
 NOTES.local.md
 DO-NOT-COMMIT-THIS-FOLDER/
 .superpowers/
 docs/
+*.tgz
+coverage/
+*.log
