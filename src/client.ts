@@ -24,7 +24,7 @@ function convertReportRow(row: Json): Json {
 
 /**
  * Reddit returns 404 for wrong HTTP verbs as well as wrong paths (verified
- * 2026-07-20, see INSIGHTS.md). We keep the set of route shapes we know are
+ * against the live API 2026-07-20). We keep the set of route shapes we know are
  * valid; a 404 on one of these means the RESOURCE is missing. A 404 anywhere
  * else means we (or Reddit) changed shape and the error says so.
  */
@@ -122,7 +122,7 @@ export class RedditAdsClient {
         if (resp.status === 404) {
           const msg = isKnownRoute(method, routePath)
             ? `Reddit resource not found: ${method} ${routePath}. Check the ID - note that Reddit also returns 404 (not 405) for unsupported HTTP methods.`
-            : `Unexpected 404 for ${method} ${routePath} - this route shape is not in the verified table; the API may have changed (see INSIGHTS.md).`;
+            : `Unexpected 404 for ${method} ${routePath} - this route shape is not in the verified table; the API may have changed.`;
           throw new RedditApiError(msg, 404, method, routePath, text);
         }
         throw new RedditApiError(

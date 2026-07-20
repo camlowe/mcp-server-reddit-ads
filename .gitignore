@@ -11,3 +11,4 @@ docs/
 *.tgz
 coverage/
 *.log
+CLAUDE.md

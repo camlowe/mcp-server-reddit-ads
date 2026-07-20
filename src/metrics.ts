@@ -1,6 +1,6 @@
 /**
  * Friendly lowercase names → Reddit report enum values.
- * The enum list comes from Reddit's 400-error dump (see INSIGHTS.md).
+ * The enum list comes from Reddit's 400-error dump.
  * Extend as users need more; keep names exactly lowercase-of-enum EXCEPT
  * where Reddit's own naming is inconsistent - we normalize on sign_up.
  */
