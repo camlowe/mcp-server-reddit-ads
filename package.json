@@ -4,7 +4,7 @@
   "description": "MCP server for the Reddit Ads API v3 - working write operations, tiered safety controls, built-in OAuth setup",
   "type": "module",
   "license": "MIT",
-  "repository": { "type": "git", "url": "git+https://github.com/OWNER/mcp-server-reddit-ads.git" },
+  "repository": { "type": "git", "url": "git+https://github.com/camlowe/mcp-server-reddit-ads.git" },
   "engines": { "node": ">=20" },
   "bin": { "mcp-server-reddit-ads": "dist/cli.js" },
   "main": "dist/index.js",

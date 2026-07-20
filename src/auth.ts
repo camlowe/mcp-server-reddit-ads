@@ -1,4 +1,4 @@
-export const USER_AGENT = "mcp-server-reddit-ads (+https://github.com/OWNER/mcp-server-reddit-ads)";
+export const USER_AGENT = "mcp-server-reddit-ads (+https://github.com/camlowe/mcp-server-reddit-ads)";
 const TOKEN_URL = "https://www.reddit.com/api/v1/access_token";
 const SKEW_MS = 60_000;
 
