@@ -4,5 +4,6 @@ dist/
 .env
 .mcp.json
 NOTES.local.md
+DO-NOT-COMMIT-THIS-FOLDER/
 .superpowers/
 docs/superpowers/
