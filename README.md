@@ -154,6 +154,21 @@ npm run build
 npm run smoke     # manual, hits the live API; needs real credentials in env
 ```
 
+## Disclaimer
+
+This software is provided "as is" and "as available", without warranty of any kind, as set out in the [LICENSE](LICENSE). It may contain bugs or errors, and any safeguards or controls it provides may fail or behave unexpectedly. Use it at your own risk.
+
+This tool can create, rename, pause, resume, and reconfigure live Reddit advertising entities, and can change budgets, bids, and targeting. These actions can start, increase, or otherwise affect real ad spend. You are solely responsible for:
+
+- any charges, ad spend, or financial outcomes that result from using this server;
+- independently reviewing and verifying every change it makes to your account;
+- keeping your Reddit API credentials secure; and
+- your use of the Reddit Ads API in line with Reddit's terms.
+
+The author accepts no liability for lost or unintended ad spend, misconfigured or paused campaigns, unintended changes, or any other damages arising from use of this software, including any failure of its safety controls to prevent an action.
+
+This project is an independent, unofficial client. It is not affiliated with, endorsed by, or sponsored by Reddit, Inc.
+
 ## License
 
 MIT
