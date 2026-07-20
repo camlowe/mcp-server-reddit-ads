@@ -98,7 +98,7 @@ A fresh install cannot pause, create, or edit anything. To allow changes, raise 
 
 Writes are off by default. `REDDIT_ADS_WRITE_TIER` opens them in two steps, so an accident at the read or safe tier cannot start spending money.
 
-Tools above the configured tier are not just refused - they are hidden from the client's tool list entirely. A read-only session exposes 15 tools; the model cannot even attempt `update_budget` because it does not know the tool exists. If a hidden tool is somehow called anyway, the server refuses it with an error naming the tier that would unlock it.
+Tools above the configured tier are not just refused - they are hidden from the client's tool list entirely. A read-only session exposes 18 tools; the model cannot even attempt `update_budget` because it does not know the tool exists. If a hidden tool is somehow called anyway, the server refuses it with an error naming the tier that would unlock it.
 
 | Tier | What it allows | Rule |
 |---|---|---|
@@ -122,7 +122,8 @@ Tools above the configured tier are not just refused - they are hidden from the 
 | Accounts | `get_accounts`, `get_account_overview` | read |
 | Entities | `get_campaigns`, `get_campaign`, `get_ad_groups`, `get_ad_group`, `get_ads`, `get_ad` | read |
 | Creative | `get_ad_creative` | read |
-| Reporting | `get_performance_report`, `get_daily_performance` | read |
+| Search | `find_entity` | read |
+| Reporting | `get_performance_report`, `get_daily_performance`, `compare_periods`, `compare_ads` | read |
 | Targeting data | `search_subreddits`, `get_interest_categories`, `search_geo_targets` | read |
 | Create | `create_campaign`, `create_ad_group`, `create_ad` | safe |
 | Pause / rename | `pause_items`, `update_name` | safe |

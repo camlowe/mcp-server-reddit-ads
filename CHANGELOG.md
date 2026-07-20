@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 (2026-07-20)
+
+- New `find_entity` tool (read tier): resolve campaign/ad group/ad names to ids with a case-insensitive substring search.
+- New `compare_periods` tool (read tier): trailing N days vs the N days before, with absolute and percent change per metric.
+- New `compare_ads` tool (read tier): per-ad performance within an ad group, joined with ad names and creative headlines, sorted by spend.
+
 ## 0.3.0 (2026-07-20)
 
 - New `get_server_status` diagnostic tool (read tier): API connectivity, write tier, hidden-tool count, and default account in one call.

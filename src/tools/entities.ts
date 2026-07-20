@@ -100,5 +100,57 @@ export function registerEntityTools(server: McpServer, ctx: ToolContext): string
     }
   );
 
-  return ["get_campaigns", "get_campaign", "get_ad_groups", "get_ad_group", "get_ads", "get_ad", "get_ad_creative"];
+  server.registerTool(
+    "find_entity",
+    {
+      description:
+        "Find campaigns, ad groups, or ads by name (case-insensitive substring match). Use this to resolve " +
+        "a human-readable name to an id before calling other tools.",
+      inputSchema: {
+        query: z.string().describe("Name fragment to search for."),
+        entity_type: z
+          .enum(["campaign", "ad_group", "ad", "any"])
+          .optional()
+          .describe("Restrict the search to one type. Default: any."),
+        account_id: z.string().optional().describe("Ad account id. Falls back to REDDIT_ADS_ACCOUNT_ID."),
+      },
+    },
+    async ({ query, entity_type, account_id }) => {
+      const acct = requireAccount(ctx, account_id);
+      const q = query.toLowerCase();
+      const want = (t: string) => !entity_type || entity_type === "any" || entity_type === t;
+      const matches: Entity[] = [];
+      const scan = (items: Entity[], type: string, parentKeys: string[]) => {
+        for (const e of items) {
+          if (typeof e.name !== "string" || !e.name.toLowerCase().includes(q)) continue;
+          const m: Entity = {
+            type,
+            id: e.id,
+            name: e.name,
+            configured_status: e.configured_status,
+            effective_status: e.effective_status,
+          };
+          for (const k of parentKeys) if (e[k] !== undefined) m[k] = e[k];
+          matches.push(m);
+        }
+      };
+      if (want("campaign")) scan(((await ctx.client.listCampaigns(acct)).data as Entity[]) ?? [], "campaign", []);
+      if (want("ad_group"))
+        scan(((await ctx.client.listAdGroups(acct)).data as Entity[]) ?? [], "ad_group", ["campaign_id"]);
+      if (want("ad"))
+        scan(((await ctx.client.listAds(acct)).data as Entity[]) ?? [], "ad", ["ad_group_id", "campaign_id"]);
+      return jsonResult({ query, total_matches: matches.length, matches: matches.slice(0, 50) });
+    }
+  );
+
+  return [
+    "get_campaigns",
+    "get_campaign",
+    "get_ad_groups",
+    "get_ad_group",
+    "get_ads",
+    "get_ad",
+    "get_ad_creative",
+    "find_entity",
+  ];
 }

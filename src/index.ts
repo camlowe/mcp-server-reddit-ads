@@ -14,14 +14,14 @@ import { registerWorkflowTools } from "./tools/workflows.js";
 import { registerSpendTools } from "./tools/spend.js";
 import { registerStatusTool } from "./tools/status.js";
 
-export const TOOL_COUNT = 27;
+export const TOOL_COUNT = 30;
 
 export function buildServer(config: Config): { server: McpServer; names: string[] } {
   const tokens = new TokenManager(config);
   const client = new RedditAdsClient(tokens);
   const ctx: ToolContext = { client, config };
   const server = new McpServer(
-    { name: "mcp-server-reddit-ads", version: "0.3.0" },
+    { name: "mcp-server-reddit-ads", version: "0.4.0" },
     { capabilities: { tools: {} } }
   );
   // Tools above the configured tier are not registered at all: the client never

@@ -166,4 +166,82 @@ describe("read tools", () => {
     await handlers.get("search_subreddits")!({ query: "gaming" });
     expect(client.searchSubreddits).toHaveBeenCalledWith("gaming");
   });
+
+  it("find_entity matches names case-insensitively across all types", async () => {
+    const { client, handlers } = setup({ defaultAccountId: "a2_def" });
+    client.listCampaigns.mockResolvedValue({
+      data: [
+        { id: "c1", name: "AV Engineers", configured_status: "ACTIVE" },
+        { id: "c2", name: "Other", configured_status: "PAUSED" },
+      ],
+      truncated: false,
+    });
+    client.listAdGroups.mockResolvedValue({
+      data: [{ id: "g1", name: "av engineers - broad", campaign_id: "c1", configured_status: "ACTIVE" }],
+      truncated: false,
+    });
+    client.listAds.mockResolvedValue({ data: [{ id: "a1", name: "unrelated" }], truncated: false });
+    const out = parse(await handlers.get("find_entity")!({ query: "AV Engineer" }));
+    expect(out.matches.map((m: { type: string; id: string }) => [m.type, m.id])).toEqual([
+      ["campaign", "c1"],
+      ["ad_group", "g1"],
+    ]);
+  });
+
+  it("find_entity restricts the search when entity_type is given", async () => {
+    const { client, handlers } = setup({ defaultAccountId: "a2_def" });
+    client.listCampaigns.mockResolvedValue({ data: [{ id: "c1", name: "X" }], truncated: false });
+    await handlers.get("find_entity")!({ query: "x", entity_type: "campaign" });
+    expect(client.listCampaigns).toHaveBeenCalled();
+    expect(client.listAdGroups).not.toHaveBeenCalled();
+    expect(client.listAds).not.toHaveBeenCalled();
+  });
+
+  it("compare_periods runs back-to-back windows and computes deltas", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-07-20T12:00:00Z"));
+    const { client, handlers } = setup({ defaultAccountId: "a2_def" });
+    client.report
+      .mockResolvedValueOnce({ metrics: [{ spend: 100, clicks: 50 }], metricsUpdatedAt: "t", truncated: false })
+      .mockResolvedValueOnce({ metrics: [{ spend: 80, clicks: 100 }], metricsUpdatedAt: "t", truncated: false });
+    const out = parse(await handlers.get("compare_periods")!({ days: 7 }));
+    expect(client.report).toHaveBeenNthCalledWith(
+      1,
+      "a2_def",
+      expect.objectContaining({ startDate: "2026-07-13", endDate: "2026-07-20" })
+    );
+    expect(client.report).toHaveBeenNthCalledWith(
+      2,
+      "a2_def",
+      expect.objectContaining({ startDate: "2026-07-05", endDate: "2026-07-12" })
+    );
+    expect(out.changes.spend).toEqual({ current: 100, previous: 80, change: 20, change_pct: 25 });
+    expect(out.changes.clicks.change_pct).toBe(-50);
+  });
+
+  it("compare_ads joins per-ad metrics with names and headlines, sorted by spend", async () => {
+    const { client, handlers } = setup({ defaultAccountId: "a2_def" });
+    client.listAds.mockResolvedValue({
+      data: [
+        { id: "a1", name: "Ad One", post_id: "t3_1", configured_status: "ACTIVE" },
+        { id: "a2", name: "Ad Two", post_id: "t3_2", configured_status: "PAUSED" },
+      ],
+      truncated: false,
+    });
+    client.report.mockResolvedValue({
+      metrics: [
+        { ad_id: "a2", spend: 40, clicks: 8 },
+        { ad_id: "a1", spend: 60, clicks: 3 },
+      ],
+      metricsUpdatedAt: "t",
+      truncated: false,
+    });
+    client.getPost.mockImplementation(async (id: string) =>
+      id === "t3_1" ? { data: { headline: "H1" } } : Promise.reject(new Error("boom"))
+    );
+    const out = parse(await handlers.get("compare_ads")!({ ad_group_id: "g1" }));
+    expect(client.listAds).toHaveBeenCalledWith("a2_def", "g1");
+    expect(out.ads[0]).toMatchObject({ ad_id: "a1", name: "Ad One", headline: "H1", spend: 60 });
+    expect(out.ads[1]).toMatchObject({ ad_id: "a2", headline: null, spend: 40 });
+  });
 });

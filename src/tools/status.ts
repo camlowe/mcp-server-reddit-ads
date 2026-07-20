@@ -16,7 +16,7 @@ export function registerStatusTool(
     },
     async () => {
       const status: Record<string, unknown> = {
-        server: { name: "mcp-server-reddit-ads", version: "0.3.0" },
+        server: { name: "mcp-server-reddit-ads", version: "0.4.0" },
         write_tier: ctx.config.writeTier,
         tools: toolCounts(),
         default_account_id: ctx.config.defaultAccountId ?? null,
