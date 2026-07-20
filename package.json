@@ -1,0 +1,33 @@
+{
+  "name": "mcp-server-reddit-ads",
+  "version": "0.1.0",
+  "description": "MCP server for the Reddit Ads API v3 - working write operations, tiered safety controls, built-in OAuth setup",
+  "type": "module",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/OWNER/mcp-server-reddit-ads.git" },
+  "engines": { "node": ">=20" },
+  "bin": { "mcp-server-reddit-ads": "dist/cli.js" },
+  "main": "dist/index.js",
+  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+  "keywords": ["mcp", "model-context-protocol", "reddit", "reddit-ads", "advertising"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "smoke": "tsx scripts/smoke.ts",
+    "prepublishOnly": "npm run typecheck && npm run test && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "eslint": "^9.7.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^2.0.0"
+  }
+}

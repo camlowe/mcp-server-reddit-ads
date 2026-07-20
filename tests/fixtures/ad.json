@@ -1,0 +1,15 @@
+{
+  "data": {
+    "id": "t3_sample01",
+    "ad_account_id": "a2_sample",
+    "ad_group_id": "1000000000000000001",
+    "campaign_id": "2000000000000000001",
+    "click_url": "https://example.com/?utm_source=reddit&utm_medium=cpc&utm_campaign=DEMO&utm_content=Sample+Ad",
+    "name": "Sample Ad",
+    "post_id": "t3_sample01",
+    "post_url": "https://www.reddit.com/r/example/comments/sample01/sample_ad/",
+    "configured_status": "PAUSED",
+    "effective_status": "PAUSED",
+    "delivery_status": ["AD_GROUP_PAUSED"]
+  }
+}

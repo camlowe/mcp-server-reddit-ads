@@ -1,0 +1,9 @@
+{
+  "data": {
+    "metrics": [
+      { "date": "2026-07-01", "impressions": 100, "clicks": 5, "spend": 51036973, "ctr": 0.008, "cpc": 510369.73 }
+    ],
+    "metrics_updated_at": "2026-07-20T02:16:44Z"
+  },
+  "pagination": {}
+}

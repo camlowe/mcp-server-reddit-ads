@@ -1,0 +1,8 @@
+.DS_Store
+node_modules/
+dist/
+.env
+.mcp.json
+NOTES.local.md
+.superpowers/
+docs/superpowers/
