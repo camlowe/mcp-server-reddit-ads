@@ -16,16 +16,22 @@ describe("buildServer", () => {
   it("registers the full tool surface at spend tier", async () => {
     const { server, names } = build("spend");
     expect(server).toBeDefined();
-    expect(names).toHaveLength(TOOL_COUNT); // 23
+    expect(names).toHaveLength(TOOL_COUNT); // 27
+    expect(names).toContain("update_ad_url");
+    expect(names).toContain("update_ad_comments");
     expect(new Set(names).size).toBe(TOOL_COUNT); // no duplicates
     expect(names).toContain("get_performance_report");
     expect(names).toContain("copy_ads");
     expect(names).toContain("update_targeting");
+    expect(names).toContain("get_server_status");
   });
 
   it("hides all write tools at read tier", async () => {
     const { names } = build("read");
-    expect(names).toHaveLength(13);
+    expect(names).toHaveLength(15);
+    expect(names).toContain("get_server_status");
+    expect(names).toContain("get_ad_creative");
+    expect(names).not.toContain("update_ad_comments");
     expect(names).toContain("get_campaigns");
     expect(names).not.toContain("pause_items");
     expect(names).not.toContain("create_campaign");
@@ -35,8 +41,9 @@ describe("buildServer", () => {
 
   it("exposes safe tools but hides spend tools at safe tier", async () => {
     const { names } = build("safe");
-    expect(names).toHaveLength(19);
+    expect(names).toHaveLength(22);
     expect(names).toContain("pause_items");
+    expect(names).toContain("update_ad_comments");
     expect(names).toContain("create_campaign");
     expect(names).toContain("copy_ads");
     expect(names).not.toContain("enable_items");

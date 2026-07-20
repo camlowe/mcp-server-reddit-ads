@@ -12,8 +12,9 @@ function setup(tier: Config["writeTier"] = "spend") {
   const client = {
     patchCampaign: vi.fn(),
     patchAdGroup: vi.fn().mockResolvedValue({ data: { id: "g1" } }),
-    patchAd: vi.fn(),
+    patchAd: vi.fn().mockResolvedValue({ data: { id: "ad1" } }),
     getAdGroup: vi.fn().mockResolvedValue({ data: { goal_value: 10_000_000, bid_value: 400_000, targeting: {} } }),
+    getAd: vi.fn().mockResolvedValue({ data: { id: "ad1", click_url: "https://ex.com/?utm_campaign=old&keep=1" } }),
   };
   const config: Config = {
     clientId: "x",
@@ -76,5 +77,32 @@ describe("spend-tier tools", () => {
   it("update_targeting requires at least one field", async () => {
     const { handlers } = setup();
     await expect(handlers.get("update_targeting")!({ ad_group_id: "g1" })).rejects.toThrow(/at least one/);
+  });
+
+  it("update_ad_url replaces the full click_url and echoes old -> new", async () => {
+    const { handlers, client } = setup();
+    const out = parse(await handlers.get("update_ad_url")!({ ad_id: "ad1", click_url: "https://ex.com/new" }));
+    expect(client.patchAd).toHaveBeenCalledWith("ad1", { click_url: "https://ex.com/new" });
+    expect(out.old_click_url).toBe("https://ex.com/?utm_campaign=old&keep=1");
+    expect(out.new_click_url).toBe("https://ex.com/new");
+  });
+
+  it("update_ad_url rewrites individual query params and preserves the rest", async () => {
+    const { handlers, client } = setup();
+    const out = parse(
+      await handlers.get("update_ad_url")!({ ad_id: "ad1", set_query_params: { utm_campaign: "new" } })
+    );
+    expect(client.patchAd).toHaveBeenCalledWith("ad1", { click_url: "https://ex.com/?utm_campaign=new&keep=1" });
+    expect(out.new_click_url).toContain("keep=1");
+  });
+
+  it("update_ad_url requires click_url or set_query_params and is gated at spend", async () => {
+    const { handlers, client } = setup();
+    await expect(handlers.get("update_ad_url")!({ ad_id: "ad1" })).rejects.toThrow(/click_url and\/or set_query_params/);
+    expect(client.patchAd).not.toHaveBeenCalled();
+    const safe = setup("safe");
+    await expect(safe.handlers.get("update_ad_url")!({ ad_id: "ad1", click_url: "https://ex.com/" })).rejects.toThrow(
+      /requires write tier 'spend'/
+    );
   });
 });

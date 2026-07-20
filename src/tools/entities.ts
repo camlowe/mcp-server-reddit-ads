@@ -83,5 +83,22 @@ export function registerEntityTools(server: McpServer, ctx: ToolContext): string
     async ({ ad_id }) => jsonResult(single(await ctx.client.getAd(ad_id)))
   );
 
-  return ["get_campaigns", "get_campaign", "get_ad_groups", "get_ad_group", "get_ads", "get_ad"];
+  server.registerTool(
+    "get_ad_creative",
+    {
+      description:
+        "Read the creative behind an ad: headline, body text, media, thumbnail, and post URL. The creative " +
+        "lives on the ad's promoted post and is immutable via the API - changing copy means creating a new ad.",
+      inputSchema: { ad_id: z.string().describe("Ad id.") },
+    },
+    async ({ ad_id }) => {
+      const ad = ((await ctx.client.getAd(ad_id)) as { data: Entity }).data;
+      const postId = ad.post_id as string | undefined;
+      if (!postId) throw new Error(`get_ad_creative: ad ${ad_id} has no post_id (no promoted post attached yet).`);
+      const post = ((await ctx.client.getPost(postId)) as { data: Entity }).data;
+      return jsonResult({ ad_id, post_id: postId, creative: post });
+    }
+  );
+
+  return ["get_campaigns", "get_campaign", "get_ad_groups", "get_ad_group", "get_ads", "get_ad", "get_ad_creative"];
 }

@@ -122,5 +122,40 @@ export function registerSpendTools(server: McpServer, ctx: ToolContext): string[
     }
   );
 
-  return ["enable_items", "update_budget", "update_bid", "update_targeting"];
+  server.registerTool(
+    "update_ad_url",
+    {
+      description:
+        "Change an existing ad's click-through URL. Pass a full replacement click_url, or set_query_params " +
+        "to rewrite individual query params (e.g. UTMs) while preserving the rest. Echoes old -> new. " +
+        "On a live ad, paid traffic goes to the new URL immediately.",
+      inputSchema: {
+        ad_id: z.string().describe("Ad id."),
+        click_url: z.string().url().optional().describe("Full replacement click-through URL."),
+        set_query_params: z
+          .record(z.string())
+          .optional()
+          .describe("Query params to set or overwrite on the URL, e.g. {\"utm_content\": \"v2\"}."),
+      },
+    },
+    async ({ ad_id, click_url, set_query_params }) => {
+      assertAllowed("spend", ctx.config.writeTier);
+      if (!click_url && !set_query_params) {
+        throw new Error("update_ad_url: pass click_url and/or set_query_params.");
+      }
+      const current = ((await ctx.client.getAd(ad_id)) as { data: { click_url?: string } }).data;
+      const base = click_url ?? current.click_url;
+      if (!base) throw new Error("update_ad_url: this ad has no click_url and none was provided.");
+      let next = base;
+      if (set_query_params) {
+        const u = new URL(base);
+        for (const [k, v] of Object.entries(set_query_params)) u.searchParams.set(k, v);
+        next = u.toString();
+      }
+      const result = await ctx.client.patchAd(ad_id, { click_url: next });
+      return jsonResult({ ad_id, old_click_url: current.click_url ?? null, new_click_url: next, result });
+    }
+  );
+
+  return ["enable_items", "update_budget", "update_bid", "update_targeting", "update_ad_url"];
 }

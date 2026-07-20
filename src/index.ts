@@ -12,15 +12,16 @@ import { registerCreateTools } from "./tools/create.js";
 import { registerManageTools } from "./tools/manage.js";
 import { registerWorkflowTools } from "./tools/workflows.js";
 import { registerSpendTools } from "./tools/spend.js";
+import { registerStatusTool } from "./tools/status.js";
 
-export const TOOL_COUNT = 23;
+export const TOOL_COUNT = 27;
 
 export function buildServer(config: Config): { server: McpServer; names: string[] } {
   const tokens = new TokenManager(config);
   const client = new RedditAdsClient(tokens);
   const ctx: ToolContext = { client, config };
   const server = new McpServer(
-    { name: "mcp-server-reddit-ads", version: "0.2.0" },
+    { name: "mcp-server-reddit-ads", version: "0.3.0" },
     { capabilities: { tools: {} } }
   );
   // Tools above the configured tier are not registered at all: the client never
@@ -40,5 +41,10 @@ export function buildServer(config: Config): { server: McpServer; names: string[
       : []),
     ...(isAllowed("spend", config.writeTier) ? registerSpendTools(server, ctx) : []),
   ];
+  // Registered last so its counts closure sees the final surface (including itself).
+  names.push(...registerStatusTool(server, ctx, () => ({
+    registered: names.length,
+    hidden: TOOL_COUNT - names.length,
+  })));
   return { server, names };
 }

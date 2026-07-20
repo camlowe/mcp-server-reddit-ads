@@ -98,7 +98,7 @@ A fresh install cannot pause, create, or edit anything. To allow changes, raise 
 
 Writes are off by default. `REDDIT_ADS_WRITE_TIER` opens them in two steps, so an accident at the read or safe tier cannot start spending money.
 
-Tools above the configured tier are not just refused - they are hidden from the client's tool list entirely. A read-only session exposes 13 tools; the model cannot even attempt `update_budget` because it does not know the tool exists. If a hidden tool is somehow called anyway, the server refuses it with an error naming the tier that would unlock it.
+Tools above the configured tier are not just refused - they are hidden from the client's tool list entirely. A read-only session exposes 15 tools; the model cannot even attempt `update_budget` because it does not know the tool exists. If a hidden tool is somehow called anyway, the server refuses it with an error naming the tier that would unlock it.
 
 | Tier | What it allows | Rule |
 |---|---|---|
@@ -118,16 +118,20 @@ Tools above the configured tier are not just refused - they are hidden from the 
 
 | Group | Tools | Tier |
 |---|---|---|
+| Diagnostics | `get_server_status` | read |
 | Accounts | `get_accounts`, `get_account_overview` | read |
 | Entities | `get_campaigns`, `get_campaign`, `get_ad_groups`, `get_ad_group`, `get_ads`, `get_ad` | read |
+| Creative | `get_ad_creative` | read |
 | Reporting | `get_performance_report`, `get_daily_performance` | read |
 | Targeting data | `search_subreddits`, `get_interest_categories`, `search_geo_targets` | read |
 | Create | `create_campaign`, `create_ad_group`, `create_ad` | safe |
 | Pause / rename | `pause_items`, `update_name` | safe |
+| Comments | `update_ad_comments` | safe |
 | Workflows | `copy_ads` | safe |
 | Resume | `enable_items` | spend |
 | Money | `update_budget`, `update_bid` | spend |
 | Delivery shape | `update_targeting` | spend |
+| Ad URL | `update_ad_url` | spend |
 
 Notes:
 
@@ -136,16 +140,18 @@ Notes:
 - `get_performance_report` takes friendly lowercase metric names (`impressions`, `clicks`, `spend`, `cpc`, `conversion_page_visit_clicks`, and so on) and validates them locally before the call, suggesting the closest match on a typo.
 - `create_ad_group` requires a `conversion_pixel_id`, and `create_campaign` requires one when campaign budget optimization is on (a Reddit mandate since 2026-07-13). The pixel id is in the Reddit Ads dashboard under Events Manager; in observed data it equals the ad account id.
 - `copy_ads` duplicates ads into another ad group (Reddit creates a duplicate promoted post per copy) with an option to rewrite `utm_campaign` and other click-URL query params.
+- Ad copy (headline, body) is immutable via the Reddit API - the only editable post property is `allow_comments`. To change what an ad says, create a new ad with the new copy, enable it, and pause the old one.
 
 ## Reddit API gotchas
 
-The client encodes behaviors verified against the live API. The two that cause the most confusion:
+The client encodes behaviors verified against the live API. The ones that cause the most confusion:
 
 - **Updates use `PATCH`, never `PUT`, and Reddit returns 404 (not 405) for the wrong verb.** A verb bug looks exactly like a missing resource. This is the bug that breaks every write in the upstream package.
 - **Single resources live on bare paths (`/ads/{id}`); collections and creates use account-scoped paths (`/ad_accounts/{id}/ads`).** Mixing them returns 404.
 - **All money values are microcurrency (one millionth of the currency unit).** This server converts them to USD on read and back on write, so tool inputs and outputs are in dollars.
 - **Report metric names are UPPERCASE enums in requests but lowercase in responses, with inconsistent spelling** (`CONVERSION_SIGN_UP_CLICKS` vs `CONVERSION_SIGNUP_TOTAL_VALUE`). Use the friendly lowercase names; the server validates and maps them.
 - **After a write, trust `configured_status`, not `effective_status`.** The configured value updates immediately; the effective value can lag by minutes.
+- **Ad copy cannot be edited.** The creative lives on a promoted post, and `PATCH /posts/{id}` permits exactly one field: `allow_comments`. Headline and body are rejected outright. Changing copy means shipping a new ad (`create_ad`, born paused) and pausing the old one - which also keeps performance history per message, so it is the right workflow anyway.
 
 ## Development
 

@@ -32,8 +32,8 @@ const KNOWN_ROUTES: Array<{ method: string; pattern: RegExp }> = [
   { method: "GET", pattern: /^\/me\/businesses$/ },
   { method: "GET", pattern: /^\/businesses\/[^/]+\/ad_accounts$/ },
   { method: "GET", pattern: /^\/ad_accounts\/[^/]+\/(campaigns|ad_groups|ads)$/ },
-  { method: "GET", pattern: /^\/(campaigns|ad_groups|ads)\/[^/]+$/ },
-  { method: "PATCH", pattern: /^\/(campaigns|ad_groups|ads)\/[^/]+$/ },
+  { method: "GET", pattern: /^\/(campaigns|ad_groups|ads|posts)\/[^/]+$/ },
+  { method: "PATCH", pattern: /^\/(campaigns|ad_groups|ads|posts)\/[^/]+$/ },
   { method: "POST", pattern: /^\/ad_accounts\/[^/]+\/(campaigns|ad_groups|ads|reports)$/ },
   { method: "GET", pattern: /^\/targeting\/(subreddits|interests|geos)$/ },
 ];
@@ -214,6 +214,13 @@ export class RedditAdsClient {
   }
   getAd(adId: string) {
     return this.request("GET", `/ads/${adId}`);
+  }
+  /** Promoted post behind an ad: the creative (headline, body, media) lives here, read-only except allow_comments. */
+  getPost(postId: string) {
+    return this.request("GET", `/posts/${postId}`);
+  }
+  patchPost(postId: string, patch: Json) {
+    return this.request("PATCH", `/posts/${postId}`, { body: { data: patch } });
   }
 
   // ── Create (account-scoped, born PAUSED unless overridden) ──────────

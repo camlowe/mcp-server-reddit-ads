@@ -17,6 +17,9 @@ function setup(tier: Config["writeTier"] = "safe") {
     patchCampaign: vi.fn(),
     patchAdGroup: vi.fn(),
     patchAd: vi.fn(),
+    getAd: vi.fn().mockResolvedValue({ data: { id: "ad1", post_id: "t3_x" } }),
+    getPost: vi.fn().mockResolvedValue({ data: { id: "t3_x", allow_comments: true } }),
+    patchPost: vi.fn().mockResolvedValue({ data: { id: "t3_x", allow_comments: false } }),
   };
   const config: Config = {
     clientId: "x",
@@ -103,5 +106,21 @@ describe("safe-write tools", () => {
     client.patchCampaign.mockResolvedValue({ data: { id: "c1", name: "New" } });
     await handlers.get("update_name")!({ item_type: "campaign", item_id: "c1", name: "New" });
     expect(client.patchCampaign).toHaveBeenCalledWith("c1", { name: "New" });
+  });
+
+  it("update_ad_comments resolves the ad's post and echoes old -> new", async () => {
+    const { handlers, client } = setup();
+    const out = parse(await handlers.get("update_ad_comments")!({ ad_id: "ad1", allow_comments: false }));
+    expect(client.patchPost).toHaveBeenCalledWith("t3_x", { allow_comments: false });
+    expect(out.old_allow_comments).toBe(true);
+    expect(out.new_allow_comments).toBe(false);
+  });
+
+  it("update_ad_comments is gated at safe tier", async () => {
+    const { handlers, client } = setup("read");
+    await expect(handlers.get("update_ad_comments")!({ ad_id: "ad1", allow_comments: false })).rejects.toThrow(
+      /requires write tier 'safe'/
+    );
+    expect(client.patchPost).not.toHaveBeenCalled();
   });
 });

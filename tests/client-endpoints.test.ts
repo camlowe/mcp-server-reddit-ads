@@ -48,6 +48,17 @@ describe("RedditAdsClient endpoints", () => {
     );
   });
 
+  it("getPost and patchPost use the bare /posts path with a data envelope", async () => {
+    const f = capture({ data: { id: "t3_x", allow_comments: true } });
+    const c = new RedditAdsClient(fakeTokens, f);
+    await c.getPost("t3_x");
+    await c.patchPost("t3_x", { allow_comments: false });
+    expect(f.mock.calls[0]![0]).toBe("https://ads-api.reddit.com/api/v3/posts/t3_x");
+    expect(f.mock.calls[1]![0]).toBe("https://ads-api.reddit.com/api/v3/posts/t3_x");
+    expect(f.mock.calls[1]![1].method).toBe("PATCH");
+    expect(JSON.parse(f.mock.calls[1]![1].body)).toEqual({ data: { allow_comments: false } });
+  });
+
   it("patchCampaign and patchAdGroup PATCH bare paths with a data envelope", async () => {
     const f = capture({ data: {} });
     const c = new RedditAdsClient(fakeTokens, f);

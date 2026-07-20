@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 (2026-07-20)
+
+- New `get_server_status` diagnostic tool (read tier): API connectivity, write tier, hidden-tool count, and default account in one call.
+- New `update_ad_url` tool (spend tier): change an existing ad's click-through URL, either wholesale or by rewriting individual query params (UTMs). Backed by live-verified `PATCH /ads/{id}` click_url behavior.
+- New `get_ad_creative` tool (read tier): read the headline, body, media, and post URL behind an ad via its promoted post.
+- New `update_ad_comments` tool (safe tier): toggle commenting on an ad's post - the only post property the API allows changing (headline and body are immutable, verified live).
+
 ## 0.2.0 (2026-07-20)
 
 - Tools above the configured write tier are no longer registered at all: read-only sessions expose 13 tools instead of 23 refusing ones. The call-time gate remains as defense-in-depth.

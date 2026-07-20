@@ -19,6 +19,7 @@ function setup(configOverrides: Partial<Config> = {}) {
     getAdGroup: vi.fn(),
     listAds: vi.fn().mockResolvedValue({ data: [], truncated: false }),
     getAd: vi.fn(),
+    getPost: vi.fn(),
     report: vi.fn().mockResolvedValue({ metrics: [], metricsUpdatedAt: null, truncated: false }),
     searchSubreddits: vi.fn(),
     getInterests: vi.fn(),
@@ -140,6 +141,24 @@ describe("read tools", () => {
     });
     const ads = parse(await handlers.get("get_ads")!({ status: "ACTIVE" }));
     expect(ads.map((a: { id: string }) => a.id)).toEqual(["a1", "a2"]);
+  });
+
+  it("get_ad_creative resolves the ad's post and returns its creative", async () => {
+    const { client, handlers } = setup();
+    client.getAd.mockResolvedValue({ data: { id: "ad1", post_id: "t3_x" } });
+    client.getPost.mockResolvedValue({
+      data: { id: "t3_x", headline: "Buy the thing", body: "", allow_comments: true },
+    });
+    const out = parse(await handlers.get("get_ad_creative")!({ ad_id: "ad1" }));
+    expect(client.getPost).toHaveBeenCalledWith("t3_x");
+    expect(out.ad_id).toBe("ad1");
+    expect(out.creative.headline).toBe("Buy the thing");
+  });
+
+  it("get_ad_creative errors clearly when the ad has no post", async () => {
+    const { client, handlers } = setup();
+    client.getAd.mockResolvedValue({ data: { id: "ad1" } });
+    await expect(handlers.get("get_ad_creative")!({ ad_id: "ad1" })).rejects.toThrow(/no post_id/);
   });
 
   it("targeting tools pass the query through", async () => {

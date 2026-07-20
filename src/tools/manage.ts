@@ -43,5 +43,32 @@ export function registerManageTools(server: McpServer, ctx: ToolContext): string
     }
   );
 
-  return ["pause_items", "update_name"];
+  server.registerTool(
+    "update_ad_comments",
+    {
+      description:
+        "Turn commenting on an ad's promoted post on or off. This is the only property of a post the Reddit " +
+        "API allows changing. Echoes old -> new.",
+      inputSchema: {
+        ad_id: z.string().describe("Ad id (the post is resolved from it)."),
+        allow_comments: z.boolean().describe("true to allow comments on the ad, false to disable them."),
+      },
+    },
+    async ({ ad_id, allow_comments }) => {
+      assertAllowed("safe", ctx.config.writeTier);
+      const ad = ((await ctx.client.getAd(ad_id)) as { data: { post_id?: string } }).data;
+      if (!ad.post_id) throw new Error(`update_ad_comments: ad ${ad_id} has no post_id.`);
+      const post = ((await ctx.client.getPost(ad.post_id)) as { data: { allow_comments?: boolean } }).data;
+      const result = await ctx.client.patchPost(ad.post_id, { allow_comments });
+      return jsonResult({
+        ad_id,
+        post_id: ad.post_id,
+        old_allow_comments: post.allow_comments ?? null,
+        new_allow_comments: allow_comments,
+        result,
+      });
+    }
+  );
+
+  return ["pause_items", "update_name", "update_ad_comments"];
 }
