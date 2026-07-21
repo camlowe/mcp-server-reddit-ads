@@ -2,7 +2,16 @@ import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline/promises";
+import { homedir } from "node:os";
 import { USER_AGENT } from "./auth.js";
+import {
+  resolveConfigPath,
+  writeConfigFile,
+  type ConfigTarget,
+  type Creds,
+  type PlatformEnv,
+  type WriteResult,
+} from "./mcp-config.js";
 
 export const REDIRECT_URI = "http://localhost:8080";
 const PORT = 8080;
@@ -143,6 +152,60 @@ function awaitCallback(expectedState: string): Promise<string> {
   });
 }
 
+/** Dependencies for the post-auth save flow, injected so the menu logic is testable. */
+export interface SaveDeps {
+  isInteractive: boolean;
+  ask: (question: string) => Promise<string>;
+  save: (target: ConfigTarget) => WriteResult;
+  labelFor: (target: ConfigTarget) => string;
+  print: (line: string) => void;
+}
+
+/**
+ * After a successful auth, offer to write the config to a known client location.
+ * When not interactive (or on any unrecognized choice / write failure) it prints the
+ * paste-in block instead, so the credentials always reach the user one way or another.
+ */
+export async function promptAndSave(creds: Creds, deps: SaveDeps): Promise<void> {
+  const block =
+    "Paste this into your MCP client config " +
+    "(REDDIT_ADS_WRITE_TIER defaults to read; set safe or spend to enable writes):\n\n" +
+    renderMcpJson(creds.clientId, creds.clientSecret, creds.refreshToken);
+
+  if (!deps.isInteractive) {
+    deps.print(block);
+    return;
+  }
+
+  deps.print("Where should I save this? (I'll patch the file, keeping anything already there.)");
+  deps.print(`  [1] Claude Code    ${deps.labelFor("code")}`);
+  deps.print(`  [2] Claude Desktop ${deps.labelFor("desktop")}`);
+  deps.print("  [3] Just print it  (don't write any file)");
+  const choice = (await deps.ask("Choice [1]: ")).trim() || "1";
+
+  const target: ConfigTarget | null = choice === "1" ? "code" : choice === "2" ? "desktop" : null;
+  if (!target) {
+    deps.print("");
+    deps.print(block);
+    return;
+  }
+
+  try {
+    const { path, backedUp } = deps.save(target);
+    deps.print("");
+    deps.print(`Wrote reddit-ads config to ${path}${backedUp ? ` (backup at ${path}.bak)` : ""}.`);
+    deps.print(
+      "Restart your MCP client to pick it up. Writes stay disabled until you set REDDIT_ADS_WRITE_TIER=safe|spend."
+    );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    deps.print("");
+    deps.print(`Could not write the config automatically: ${msg}`);
+    deps.print("Paste this in manually instead:\n");
+    deps.print(block);
+  }
+}
+
 export async function runAuthCommand(): Promise<void> {
   const clientId = process.env.REDDIT_CLIENT_ID || (await prompt("Reddit app client ID: "));
   const clientSecret = process.env.REDDIT_CLIENT_SECRET || (await prompt("Reddit app client secret: "));
@@ -162,6 +225,19 @@ export async function runAuthCommand(): Promise<void> {
   const { refreshToken, scopes } = await exchangeCode(clientId, clientSecret, code);
 
   console.error(`\nSuccess. Granted scopes: ${scopes}\n`);
-  console.error("Paste this into your .mcp.json (REDDIT_ADS_WRITE_TIER defaults to read; set safe or spend to enable writes):\n");
-  console.error(renderMcpJson(clientId, clientSecret, refreshToken));
+
+  const creds: Creds = { clientId, clientSecret, refreshToken };
+  const platformEnv: PlatformEnv = {
+    platform: process.platform,
+    homedir: homedir(),
+    cwd: process.cwd(),
+    appData: process.env.APPDATA,
+  };
+  await promptAndSave(creds, {
+    isInteractive: Boolean(process.stdin.isTTY),
+    ask: prompt,
+    save: (target) => writeConfigFile(resolveConfigPath(target, platformEnv), creds),
+    labelFor: (target) => resolveConfigPath(target, platformEnv),
+    print: (line) => console.error(line),
+  });
 }

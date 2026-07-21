@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `auth` can now write the MCP config for you. After a successful login it offers an interactive menu to save the credentials to Claude Code (`./.mcp.json`) or Claude Desktop (`claude_desktop_config.json`), or to just print the block as before. Writes patch in place: other servers are left untouched, an existing `reddit-ads` entry keeps its `command`/`args` and extra env (account id, write tier) with only the credentials refreshed, and the previous file is backed up to `<file>.bak`. A file with invalid JSON is never overwritten. Because the write happens in your own terminal, credentials no longer need to be pasted through an MCP client.
+
 ## 0.4.0 (2026-07-20)
 
 - New `find_entity` tool (read tier): resolve campaign/ad group/ad names to ids with a case-insensitive substring search.
