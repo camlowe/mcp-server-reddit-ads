@@ -10,17 +10,48 @@ A Reddit Ads API v3 MCP server with working write operations and tiered safety c
 
 ## Getting started
 
-There are two ways to set it up. Either way, a fresh install is read-only and cannot change anything in your account until you deliberately turn on writes (the last step).
+Pick the path that matches your setup: a paste-one-prompt route for Claude Code or Claude Desktop, or the manual steps for any other client. Every path installs read-only and cannot change anything in your account until you deliberately turn on writes (the last step).
 
-### Simple setup (Claude Code)
+### Simple setup with Claude Code (recommended)
 
-If you use Claude Code, let it do the mechanical work. Point it at this repository and ask, for example:
+If you use Claude Code, let it do the mechanical work. Copy this whole prompt and paste it into Claude Code:
 
-> Set up the mcp-server-reddit-ads MCP server from https://github.com/camlowe/mcp-server-reddit-ads for me, read-only. Walk me through registering the Reddit app, run the `auth` command, and add the server to my MCP config.
+```text
+Set up the mcp-server-reddit-ads MCP server for me so I can manage my Reddit Ads
+account from here. Install it read-only for now - no write access. Please:
+
+1. Read the setup instructions at https://github.com/camlowe/mcp-server-reddit-ads
+2. Check I'm on Node.js 20 or newer.
+3. Walk me through registering a Reddit app, since only I can do that part. Tell me
+   exactly where to click and which two values (client ID and client secret) to copy.
+4. Run `npx mcp-server-reddit-ads auth` and guide me through the browser login.
+5. Add the server to my .mcp.json using the credentials from the auth step, with the
+   write tier set to read-only.
+6. Confirm the server loads and list my Reddit ad accounts to prove it works.
+
+Do not enable any write access yet. I'll ask for that later when I'm ready.
+```
 
 Claude reads this README, tells you exactly what to do for the parts only you can do, runs `npx mcp-server-reddit-ads auth`, writes your `.mcp.json`, and confirms the server loads. Later, when you want to make changes, just ask it to raise the write tier.
 
-You still register the Reddit app (step 1 below) and approve the browser login yourself - those cannot be automated.
+### Simple setup with Claude Desktop
+
+Claude Desktop can't run terminal commands for you, so this prompt has it act as a patient guide while you run one command and edit one config file. Paste it into a new Claude Desktop chat:
+
+```text
+I want to set up the mcp-server-reddit-ads MCP server so I can manage my Reddit Ads
+account with you. I'm not a developer, so please guide me one step at a time with
+simple, copy-pasteable instructions, and wait for me to confirm each step before
+moving to the next.
+
+Look up the setup details at https://github.com/camlowe/mcp-server-reddit-ads. The
+main steps are: register a Reddit app to get a client ID and secret, run a one-time
+`npx mcp-server-reddit-ads auth` command in my terminal to log in, and add the server
+to my Claude Desktop config file. Set it up read-only so nothing in my account can
+change until I decide to turn writes on.
+```
+
+Either way, you still register the Reddit app (step 1 below) and approve the browser login yourself - those cannot be automated.
 
 ### Advanced setup (manual)
 
@@ -28,7 +59,14 @@ The full process, for other MCP clients or if you prefer to do it by hand. It ta
 
 #### 1. Register a Reddit app
 
-In the Reddit Ads dashboard, go to **Business settings > Developer Applications > Create App**. Give it a name, set the **redirect URI** to exactly `http://localhost:8080`, and choose a primary contact (a business admin). Save it, then copy the **client ID** and **client secret** it shows you - you need both in the next step.
+1. Open the Reddit Ads dashboard at [ads.reddit.com](https://ads.reddit.com) and sign in with an account that has business-admin access.
+2. Open **Business settings** (the gear / settings menu, top right), then **Developer Applications**, then **Create App**.
+3. Give the app a name, set the **redirect URI** to exactly `http://localhost:8080`, and choose a primary contact (a business admin). Save it.
+
+Reddit then shows the two values you need in step 2:
+
+- **Client ID** - the short string (roughly 22 characters, for example `Ab3xK9zQ1rStUvWxYzAbCd`) displayed directly under the app's name. Reddit often shows it without a "client ID" label, so it is easy to miss; it is the code beneath the app title, not the app name itself.
+- **Client secret** - the longer value shown in the field explicitly labeled **secret**. Copy it right away; if you lose it you can regenerate a new secret from the same page.
 
 Do not use reddit.com/prefs/apps: it silently rejects new apps under the Responsible Builder Policy, so the Ads developer portal is the only working path for advertisers.
 
@@ -40,13 +78,24 @@ Run the built-in setup helper:
 npx mcp-server-reddit-ads auth
 ```
 
-It asks for the client ID and secret from step 1 (or reads them from `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET` if you have set them), opens the Reddit authorization page in your browser, and waits on `http://localhost:8080` for you to approve. Once you approve, it prints a ready-to-paste configuration block with all three credentials already filled in.
+It asks for the client ID and secret from step 1 (or reads them from `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET` if you have set them), opens the Reddit authorization page in your browser, and waits on `http://localhost:8080` for you to approve.
+
+Once you approve, it offers to save the configuration for you:
+
+```
+Where should I save this? (I'll patch the file, keeping anything already there.)
+  [1] Claude Code    ./.mcp.json
+  [2] Claude Desktop <your platform's claude_desktop_config.json>
+  [3] Just print it  (don't write any file)
+```
+
+Pick [1] or [2] and it writes the credentials straight to disk (backing up any existing file to `<file>.bak` and leaving other servers untouched), so nothing sensitive has to pass through your MCP client. If you prefer to place it yourself, pick [3] and it prints a ready-to-paste block instead. When it can't detect a TTY (for example, piped output), it skips the menu and prints the block.
 
 If it fails, it tells you how to fix the two common causes: port 8080 already in use, and a redirect-URI mismatch (the app's redirect URI must be exactly `http://localhost:8080`).
 
 #### 3. Add the server to your MCP client
 
-Paste the block from step 2 into your client's `.mcp.json`. It has this shape, with the three credential values already populated by the `auth` command:
+If you picked [1] or [2] in step 2, this is already done - skip to step 4. Otherwise, paste the printed block into your client's config. It has this shape, with the three credential values already populated by the `auth` command:
 
 ```json
 {
