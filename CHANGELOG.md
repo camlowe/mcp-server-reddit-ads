@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.2 (2026-07-27)
+
+- Published to the official MCP registry as `io.github.camlowe/mcp-server-reddit-ads`. `server.json` is now tracked in the repo, and the release workflow publishes to the registry straight after npm, authenticating with the same OIDC token already used for npm provenance (no new secrets).
+- Added the `mcpName` field to `package.json`. The registry verifies npm ownership by matching it against the server name, and the release workflow now fails early if the two ever disagree.
+- The release version is stamped into both of `server.json`'s version fields from the git tag, so the registry listing cannot drift from the published npm version.
+
 ## 0.5.1 (2026-07-27)
 
 - Discoverability metadata only, no functional change: expanded npm `keywords` from 5 to 17 so the package surfaces for searches like `mcp-server`, `reddit-api`, `ads-api`, `paid-social`, and `claude-code`. GitHub repo topics and homepage URL were updated alongside this.

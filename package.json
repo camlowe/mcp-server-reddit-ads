@@ -1,7 +1,8 @@
 {
   "name": "mcp-server-reddit-ads",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "MCP server for the Reddit Ads API v3 - working write operations, tiered safety controls, built-in OAuth setup",
+  "mcpName": "io.github.camlowe/mcp-server-reddit-ads",
   "type": "module",
   "license": "MIT",
   "author": "Cameron Lowe",

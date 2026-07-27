@@ -1,0 +1,74 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.camlowe/mcp-server-reddit-ads",
+  "title": "Reddit Ads",
+  "description": "Reddit Ads API v3: campaigns, ad groups, ads, reports, plus working writes with safety tiers.",
+  "websiteUrl": "https://github.com/camlowe/mcp-server-reddit-ads#readme",
+  "repository": {
+    "url": "https://github.com/camlowe/mcp-server-reddit-ads",
+    "source": "github"
+  },
+  "version": "0.5.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "mcp-server-reddit-ads",
+      "version": "0.5.2",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "REDDIT_CLIENT_ID",
+          "description": "Reddit app client id (from the Ads developer portal)",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "REDDIT_CLIENT_SECRET",
+          "description": "Reddit app client secret",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "REDDIT_REFRESH_TOKEN",
+          "description": "OAuth refresh token (mint one with: npx mcp-server-reddit-ads auth)",
+          "isRequired": true,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "REDDIT_ADS_WRITE_TIER",
+          "description": "Write tier: read (default, no writes), safe, or spend",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        },
+        {
+          "name": "REDDIT_ADS_ACCOUNT_ID",
+          "description": "Default ad account id (a2_...) for single-account use",
+          "isRequired": false,
+          "isSecret": false,
+          "format": "string"
+        }
+      ]
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "categories": ["marketing", "advertising", "analytics"],
+      "tags": [
+        "reddit",
+        "reddit-ads",
+        "advertising",
+        "ads-api",
+        "ppc",
+        "paid-social",
+        "campaign-management",
+        "reporting"
+      ]
+    }
+  }
+}
