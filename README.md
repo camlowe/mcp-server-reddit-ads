@@ -1,4 +1,4 @@
-# mcp-server-reddit-ads
+# MCP Server for Reddit Ads (mcp-server-reddit-ads)
 
 A Reddit Ads API v3 MCP server with working write operations and tiered safety controls, built and dogfooded by an actual Reddit advertiser. It gives an MCP client read access to campaigns, ad groups, ads, and performance reports, plus gated write tools for pausing, creating, budget and bid changes, targeting edits, and copying ads between ad groups.
 
