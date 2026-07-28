@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { jsonResult, type ToolContext } from "./types.js";
+import { OVERWRITING_WRITE, jsonResult, type ToolContext } from "./types.js";
 import { assertAllowed } from "../gate.js";
 import { microToUsd, usdToMicro } from "../money.js";
 import { bulkPatch } from "./patch-helpers.js";
@@ -20,6 +20,7 @@ export function registerSpendTools(server: McpServer, ctx: ToolContext): string[
   server.registerTool(
     "enable_items",
     {
+      annotations: OVERWRITING_WRITE,
       description:
         "Resume delivery on one or more entities of a single type (set configured_status ACTIVE). This " +
         "restarts spend. One bad id does not abort the rest; each result reports the read-back configured_status.",
@@ -43,7 +44,11 @@ export function registerSpendTools(server: McpServer, ctx: ToolContext): string[
   server.registerTool(
     "update_budget",
     {
-      description: "Set an ad group's daily spend budget (USD). Echoes the previous and new value.",
+      annotations: OVERWRITING_WRITE,
+      description:
+        "Set an ad group's daily spend budget in USD, echoing the previous and new value. Overwrites " +
+        "the prior budget and applies to the live ad group immediately. Budgets live on ad groups, " +
+        "not campaigns; read the current value with get_ad_group first.",
       inputSchema: {
         ad_group_id: z.string().describe("Ad group id."),
         daily_budget_usd: z.number().positive().describe("New daily budget in USD."),
@@ -68,7 +73,11 @@ export function registerSpendTools(server: McpServer, ctx: ToolContext): string[
   server.registerTool(
     "update_bid",
     {
-      description: "Set an ad group's bid value (USD). Echoes the previous and new value.",
+      annotations: OVERWRITING_WRITE,
+      description:
+        "Set an ad group's bid in USD, echoing the previous and new value. Overwrites the prior bid " +
+        "and applies to the live ad group immediately. The bid governs what you pay per auction; use " +
+        "update_budget to cap total daily spend.",
       inputSchema: {
         ad_group_id: z.string().describe("Ad group id."),
         bid_usd: z.number().positive().describe("New bid value in USD."),
@@ -90,6 +99,7 @@ export function registerSpendTools(server: McpServer, ctx: ToolContext): string[
   server.registerTool(
     "update_targeting",
     {
+      annotations: OVERWRITING_WRITE,
       description:
         "Update an ad group's targeting. Only the fields you pass are changed; every other targeting key " +
         "(including exclusions) is preserved. Echoes a from/to diff of the changed keys.",
@@ -125,6 +135,7 @@ export function registerSpendTools(server: McpServer, ctx: ToolContext): string[
   server.registerTool(
     "update_ad_url",
     {
+      annotations: OVERWRITING_WRITE,
       description:
         "Change an existing ad's click-through URL. Pass a full replacement click_url, or set_query_params " +
         "to rewrite individual query params (e.g. UTMs) while preserving the rest. Echoes old -> new. " +

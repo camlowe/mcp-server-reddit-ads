@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { jsonResult, requireAccount, type ToolContext } from "./types.js";
+import { ADDITIVE_WRITE, jsonResult, requireAccount, type ToolContext } from "./types.js";
 import { assertAllowed } from "../gate.js";
 import { toToolText } from "../errors.js";
 
@@ -17,6 +17,7 @@ export function registerWorkflowTools(server: McpServer, ctx: ToolContext): stri
   server.registerTool(
     "copy_ads",
     {
+      annotations: ADDITIVE_WRITE,
       description:
         "Duplicate a set of ads into another ad group. Each copy is created PAUSED. Reddit creates a new " +
         "duplicate promoted post per copy. Optionally rewrite click_url query params (e.g. utm_campaign) for " +

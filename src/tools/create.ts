@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { jsonResult, requireAccount, type ToolContext } from "./types.js";
+import { ADDITIVE_WRITE, jsonResult, requireAccount, type ToolContext } from "./types.js";
 import { assertAllowed } from "../gate.js";
 import { usdToMicro } from "../money.js";
 
@@ -11,6 +11,7 @@ export function registerCreateTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "create_campaign",
     {
+      annotations: ADDITIVE_WRITE,
       description:
         "Create a campaign. Always created PAUSED. If campaign budget optimization is on, a conversion " +
         `pixel id is required (Reddit mandate since 2026-07-13). ${PIXEL_HELP}`,
@@ -43,6 +44,7 @@ export function registerCreateTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "create_ad_group",
     {
+      annotations: ADDITIVE_WRITE,
       description:
         "Create an ad group. Always created PAUSED. A conversion pixel id is required (Reddit mandate since " +
         `2026-07-13). ${PIXEL_HELP}`,
@@ -79,6 +81,7 @@ export function registerCreateTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "create_ad",
     {
+      annotations: ADDITIVE_WRITE,
       description:
         "Create an ad. Always created PAUSED. Either promote an existing post (post_url) or build a link ad " +
         "(headline + click_url, optionally creative_type/thumbnail_url).",

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { jsonResult, requireAccount, type ToolContext } from "./types.js";
+import { READ_ONLY, jsonResult, requireAccount, type ToolContext } from "./types.js";
 import { resolveMetrics } from "../metrics.js";
 import { isoDaysAgo, todayIso } from "../dates.js";
 
@@ -19,7 +19,11 @@ export function registerAccountTools(server: McpServer, ctx: ToolContext): strin
   server.registerTool(
     "get_accounts",
     {
-      description: "List all Reddit ad accounts reachable by these credentials (across every business).",
+      annotations: READ_ONLY,
+      description:
+        "List every Reddit ad account these credentials can reach, across all businesses. Use this " +
+        "first to get an account id for the other tools, or set REDDIT_ADS_ACCOUNT_ID to default it. " +
+        "One row per account, so the result is small.",
       inputSchema: {},
     },
     async () => jsonResult(await ctx.client.getAccounts())
@@ -28,6 +32,7 @@ export function registerAccountTools(server: McpServer, ctx: ToolContext): strin
   server.registerTool(
     "get_account_overview",
     {
+      annotations: READ_ONLY,
       description:
         "One-glance health of an account: campaign/ad-group/ad counts by effective status, and this-week " +
         "vs last-week spend (two comparable 7-day windows). One entity sweep plus one report call.",

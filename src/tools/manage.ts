@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { jsonResult, type ToolContext } from "./types.js";
+import { OVERWRITING_WRITE, REVERSIBLE_WRITE, jsonResult, type ToolContext } from "./types.js";
 import { assertAllowed } from "../gate.js";
 import { bulkPatch, patchByType } from "./patch-helpers.js";
 
@@ -12,9 +12,12 @@ export function registerManageTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "pause_items",
     {
+      annotations: REVERSIBLE_WRITE,
       description:
-        "Pause one or more entities of a single type (campaigns, ad groups, or ads). One bad id does not " +
-        "abort the rest; each result reports success and the read-back configured_status.",
+        "Pause one or more entities of a single type (campaigns, ad groups, or ads), stopping their spend. " +
+        "Reversible with enable_items. One bad id does not abort the rest; each result reports success and " +
+        "the read-back configured_status, which is the field to trust after a write (effective_status lags " +
+        "by minutes).",
       inputSchema: {
         item_type: ITEM_TYPE.describe("Type of every id in item_ids."),
         item_ids: z.array(z.string()).min(1).describe("Ids to pause (all of item_type)."),
@@ -30,7 +33,11 @@ export function registerManageTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "update_name",
     {
-      description: "Rename a single entity (campaign, ad group, or ad).",
+      annotations: OVERWRITING_WRITE,
+      description:
+        "Rename one entity (campaign, ad group, or ad). Cosmetic only: delivery, budget, and " +
+        "targeting are untouched. The previous name is overwritten and cannot be recovered through " +
+        "this API.",
       inputSchema: {
         item_type: ITEM_TYPE.describe("Type of the entity."),
         item_id: z.string().describe("Entity id."),
@@ -46,6 +53,7 @@ export function registerManageTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "update_ad_comments",
     {
+      annotations: OVERWRITING_WRITE,
       description:
         "Turn commenting on an ad's promoted post on or off. This is the only property of a post the Reddit " +
         "API allows changing. Echoes old -> new.",

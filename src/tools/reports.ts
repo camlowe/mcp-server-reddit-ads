@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { jsonResult, requireAccount, type ToolContext } from "./types.js";
+import { READ_ONLY, jsonResult, requireAccount, type ToolContext } from "./types.js";
 import { DEFAULT_METRICS, resolveBreakdowns, resolveMetrics } from "../metrics.js";
 import { isoDaysAgo, todayIso } from "../dates.js";
 
@@ -8,10 +8,13 @@ export function registerReportTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "get_performance_report",
     {
+      annotations: READ_ONLY,
       description:
-        "Performance report for an ad account. Accepts friendly lowercase metric names " +
+        "Performance totals for an ad account over a date window. Accepts friendly lowercase metric names " +
         "(e.g. impressions, clicks, spend, ctr, cpc, conversion_page_visit_clicks) validated locally " +
-        "before the call. Money metrics come back in USD. Defaults to the last 7 days.",
+        "before the call. Money metrics come back in USD. Defaults to the last 7 days. Use " +
+        "get_daily_performance for a per-day breakdown, compare_periods for change against the prior " +
+        "window, or compare_ads to rank the ads inside one ad group.",
       inputSchema: {
         account_id: z.string().optional().describe("Ad account id. Falls back to REDDIT_ADS_ACCOUNT_ID."),
         start_date: z.string().optional().describe("YYYY-MM-DD, inclusive. Default: 7 days ago."),
@@ -39,7 +42,11 @@ export function registerReportTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "get_daily_performance",
     {
-      description: "Day-by-day performance for the trailing N days (breakdown by date). Money metrics in USD.",
+      annotations: READ_ONLY,
+      description:
+        "Day-by-day performance for the trailing N days, broken down by date, with money metrics in " +
+        "USD. Use this to see a trend or spot a spike. For window totals use get_performance_report, " +
+        "or compare_periods for a like-for-like change against the previous N days.",
       inputSchema: {
         account_id: z.string().optional().describe("Ad account id. Falls back to REDDIT_ADS_ACCOUNT_ID."),
         days: z.number().int().positive().optional().describe("Number of trailing days. Default 7."),
@@ -60,10 +67,12 @@ export function registerReportTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "compare_periods",
     {
+      annotations: READ_ONLY,
       description:
         "Compare account performance over the trailing N days against the N days immediately before " +
         "(same-length back-to-back windows). Returns totals for both windows plus absolute and percent " +
-        "change per metric. Money metrics in USD.",
+        "change per metric. Money metrics in USD. Two totals per metric only: use get_daily_performance " +
+        "to see the day-level shape within a window.",
       inputSchema: {
         account_id: z.string().optional().describe("Ad account id. Falls back to REDDIT_ADS_ACCOUNT_ID."),
         days: z.number().int().positive().max(90).optional().describe("Window length in trailing days. Default 7."),
@@ -106,9 +115,11 @@ export function registerReportTools(server: McpServer, ctx: ToolContext): string
   server.registerTool(
     "compare_ads",
     {
+      annotations: READ_ONLY,
       description:
         "Per-ad performance within one ad group, joined with each ad's name and creative headline and " +
-        "sorted by spend - answers 'which creative is winning?' in one call. Money metrics in USD.",
+        "sorted by spend - answers 'which creative is winning?' in one call. Money metrics in USD. " +
+        "Scoped to a single ad group: use get_performance_report for account-level totals.",
       inputSchema: {
         ad_group_id: z.string().describe("Ad group whose ads to compare."),
         account_id: z.string().optional().describe("Ad account id. Falls back to REDDIT_ADS_ACCOUNT_ID."),

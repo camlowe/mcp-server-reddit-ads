@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.5 (2026-07-28)
+
+- Every tool now carries MCP annotations, so a client can tell before calling whether a tool writes, whether repeating it does anything, and whether it reaches an external system. Reads are `readOnlyHint`. Creates and `copy_ads` are additive and non-idempotent. `pause_items` is reversible and non-destructive, while `enable_items` is destructive because it resumes real spend. Budget, bid, targeting, URL, and name changes are destructive and idempotent, since they overwrite existing configuration.
+- Rewrote the thin tool descriptions. Every tool now says when to use it instead of its nearest sibling (`get_ad` vs `get_ad_creative`, `get_performance_report` vs `get_daily_performance` vs `compare_periods` vs `compare_ads`, the three targeting lookups vs `update_targeting`) and discloses behaviour worth knowing before a call: what is overwritten, what applies to live delivery immediately, and where result size grows with account size. The shortest description went from 22 characters to 138.
+- Added `tests/annotations.test.ts`, which drives a real MCP client over in-memory transports and asserts what `tools/list` actually returns, rather than reading server internals.
+
 ## 0.5.4 (2026-07-28)
 
 - The server no longer exits when credentials are missing. It starts, registers its tools, and warns loudly on stderr; the error now surfaces on the first call that needs the API, naming the same env vars and pointing at the `auth` command. Registries and directories spawn a server with no environment to enumerate its tools, and exiting there meant never being listed. An invalid `REDDIT_ADS_WRITE_TIER` is still fatal, since silently falling back to read would hide a typo from an operator who believes writes are on.

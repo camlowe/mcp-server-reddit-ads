@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { jsonResult, type ToolContext } from "./types.js";
+import { READ_ONLY, jsonResult, type ToolContext } from "./types.js";
 
 export function registerStatusTool(
   server: McpServer,
@@ -9,6 +9,7 @@ export function registerStatusTool(
   server.registerTool(
     "get_server_status",
     {
+      annotations: READ_ONLY,
       description:
         "Diagnose the server: Reddit Ads API connectivity, configured write tier, how many tools that tier " +
         "hides, and the default account. Start here when something is not working.",
