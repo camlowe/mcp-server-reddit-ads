@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.3 (2026-07-28)
+
+- Fixed the version reported to MCP clients. It was hardcoded to `0.4.0` and had not moved for three releases, so every client saw the wrong version on `initialize`. It now reads from `package.json`, with a test pinning the two together so it cannot drift again.
+- Added a `Dockerfile` for running the server in a container, and for registry health checks that need to start it and enumerate tools without credentials. Read tier by default, so no tool that can change an ad account is registered. Placeholder credential values are overridden at runtime with `-e`.
+- Added a `.dockerignore`, so `docker build` cannot pull local credential files into the build context.
+
 ## 0.5.2 (2026-07-27)
 
 - Published to the official MCP registry as `io.github.camlowe/mcp-server-reddit-ads`. `server.json` is now tracked in the repo, and the release workflow publishes to the registry straight after npm, authenticating with the same OIDC token already used for npm provenance (no new secrets).

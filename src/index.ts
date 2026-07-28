@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { TokenManager } from "./auth.js";
 import { isAllowed } from "./gate.js";
@@ -16,12 +17,19 @@ import { registerStatusTool } from "./tools/status.js";
 
 export const TOOL_COUNT = 30;
 
+// Read from package.json instead of a literal. A hardcoded version here stayed
+// at 0.4.0 through three releases, so every client was told the wrong version.
+// Resolves to the package root from both src/ (tests) and dist/ (published).
+export const SERVER_VERSION = (
+  createRequire(import.meta.url)("../package.json") as { version: string }
+).version;
+
 export function buildServer(config: Config): { server: McpServer; names: string[] } {
   const tokens = new TokenManager(config);
   const client = new RedditAdsClient(tokens);
   const ctx: ToolContext = { client, config };
   const server = new McpServer(
-    { name: "mcp-server-reddit-ads", version: "0.4.0" },
+    { name: "mcp-server-reddit-ads", version: SERVER_VERSION },
     { capabilities: { tools: {} } }
   );
   // Tools above the configured tier are not registered at all: the client never

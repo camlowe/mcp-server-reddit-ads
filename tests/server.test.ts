@@ -1,5 +1,6 @@
+import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
-import { buildServer, TOOL_COUNT } from "../src/index.js";
+import { buildServer, SERVER_VERSION, TOOL_COUNT } from "../src/index.js";
 import type { Tier } from "../src/gate.js";
 
 function build(writeTier: Tier) {
@@ -11,6 +12,15 @@ function build(writeTier: Tier) {
     defaultAccountId: undefined,
   });
 }
+
+describe("server version", () => {
+  // A hardcoded literal here drifted from the published version for three
+  // releases, so every client was told the wrong version. Pin it to package.json.
+  it("matches the version in package.json", () => {
+    const pkg = createRequire(import.meta.url)("../package.json") as { version: string };
+    expect(SERVER_VERSION).toBe(pkg.version);
+  });
+});
 
 describe("buildServer", () => {
   it("registers the full tool surface at spend tier", async () => {

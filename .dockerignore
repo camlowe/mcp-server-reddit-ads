@@ -1,0 +1,29 @@
+# Keep credentials and local-only context out of the build context entirely.
+# The Dockerfile only COPYs named paths, but the whole directory is still sent
+# to the daemon without this, so these must never be part of it.
+.env*
+.mcp.json
+.npmrc
+NOTES.local.md
+DO-NOT-COMMIT-THIS-FOLDER/
+
+# Rebuilt inside the image; copying them in would shadow the build.
+node_modules/
+dist/
+
+# Not needed to build or run the server.
+.git/
+.github/
+.superpowers/
+docs/
+scripts/
+tests/
+coverage/
+*.log
+*.tgz
+.DS_Store
+CLAUDE.md
+CHANGELOG.md
+README*.md
+eslint.config.js
+vitest.config.ts
