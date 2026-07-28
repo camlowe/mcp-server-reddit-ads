@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { TokenManager } from "../src/auth.js";
+import { ConfigError } from "../src/errors.js";
 
 const cfg = { clientId: "cid", clientSecret: "cs", refreshToken: "rt0" };
 
@@ -50,5 +51,27 @@ describe("TokenManager", () => {
     const f = fetchReturning({ error: "invalid_grant" }, 400);
     const tm = new TokenManager(cfg, f);
     await expect(tm.getAccessToken()).rejects.toThrow(/invalid_grant|token exchange failed/i);
+  });
+
+  // Credentials are validated here rather than at startup, so the server can be
+  // spawned with no env to enumerate tools. This is the point of first use.
+  it("fails on first use when credentials are missing, without calling Reddit", async () => {
+    const f = fetchReturning({ access_token: "nope" });
+    const tm = new TokenManager({ clientId: "", clientSecret: "", refreshToken: "" }, f);
+    await expect(tm.getAccessToken()).rejects.toThrow(ConfigError);
+    await expect(tm.getAccessToken()).rejects.toThrow(/REDDIT_CLIENT_ID/);
+    await expect(tm.getAccessToken()).rejects.toThrow(/npx mcp-server-reddit-ads auth/);
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it("names only the credentials that are absent", async () => {
+    const tm = new TokenManager({ clientId: "cid", clientSecret: "", refreshToken: "rt" });
+    const err = await tm.getAccessToken().then(
+      () => null,
+      (e: unknown) => e as Error
+    );
+    expect(err?.message).toContain("REDDIT_CLIENT_SECRET");
+    expect(err?.message).not.toContain("REDDIT_CLIENT_ID");
+    expect(err?.message).not.toContain("REDDIT_REFRESH_TOKEN");
   });
 });

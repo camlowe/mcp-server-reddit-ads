@@ -17,6 +17,7 @@ describe("loadConfig", () => {
       refreshToken: "rt",
       writeTier: "read",
       defaultAccountId: undefined,
+      missingCredentials: [],
     });
   });
 
@@ -26,13 +27,29 @@ describe("loadConfig", () => {
     expect(c.defaultAccountId).toBe("a2_x");
   });
 
-  it("fails with a pointer to the auth command when creds are missing", () => {
-    expect(() => loadConfig({})).toThrow(ConfigError);
-    expect(() => loadConfig({})).toThrow(/npx mcp-server-reddit-ads auth/);
-    expect(() => loadConfig({})).toThrow(/REDDIT_CLIENT_ID/);
+  // Missing credentials must not stop the server from starting: registries and
+  // directories spawn it with no env at all to enumerate tools, and an exit
+  // there means the server never gets listed. The failure moves to first use.
+  it("reports missing creds instead of throwing, so the server can still start", () => {
+    expect(() => loadConfig({})).not.toThrow();
+    const c = loadConfig({});
+    expect(c.missingCredentials).toEqual([
+      "REDDIT_CLIENT_ID",
+      "REDDIT_CLIENT_SECRET",
+      "REDDIT_REFRESH_TOKEN",
+    ]);
+    expect(c.writeTier).toBe("read");
   });
 
+  it("reports only the creds that are actually absent", () => {
+    const c = loadConfig({ REDDIT_CLIENT_ID: "id" });
+    expect(c.missingCredentials).toEqual(["REDDIT_CLIENT_SECRET", "REDDIT_REFRESH_TOKEN"]);
+  });
+
+  // Still fatal, unlike missing credentials: a typo'd tier must not silently
+  // degrade to read while the operator believes writes are enabled.
   it("rejects an invalid tier", () => {
+    expect(() => loadConfig({ ...base, REDDIT_ADS_WRITE_TIER: "yolo" })).toThrow(ConfigError);
     expect(() => loadConfig({ ...base, REDDIT_ADS_WRITE_TIER: "yolo" })).toThrow(
       /REDDIT_ADS_WRITE_TIER must be one of: read, safe, spend/
     );

@@ -1,3 +1,5 @@
+import { ConfigError } from "./errors.js";
+
 export const USER_AGENT = "mcp-server-reddit-ads (+https://github.com/camlowe/mcp-server-reddit-ads)";
 const TOKEN_URL = "https://www.reddit.com/api/v1/access_token";
 const SKEW_MS = 60_000;
@@ -6,6 +8,25 @@ export interface AuthConfig {
   clientId: string;
   clientSecret: string;
   refreshToken: string;
+}
+
+/** Which env var supplies each credential, for error messages. */
+const CREDENTIAL_ENV: ReadonlyArray<readonly [keyof AuthConfig, string]> = [
+  ["clientId", "REDDIT_CLIENT_ID"],
+  ["clientSecret", "REDDIT_CLIENT_SECRET"],
+  ["refreshToken", "REDDIT_REFRESH_TOKEN"],
+];
+
+/** Env var names for credentials that are absent or empty. */
+export function missingCredentials(cfg: Partial<AuthConfig>): string[] {
+  return CREDENTIAL_ENV.filter(([field]) => !cfg[field]).map(([, envVar]) => envVar);
+}
+
+export function missingCredentialsMessage(missing: string[]): string {
+  return (
+    `Missing required env vars: ${missing.join(", ")}. ` +
+    `Run \`npx mcp-server-reddit-ads auth\` for a guided one-time setup that produces all three.`
+  );
 }
 
 export class TokenManager {
@@ -21,6 +42,11 @@ export class TokenManager {
   }
 
   async getAccessToken(): Promise<string> {
+    // Credentials are checked here, not at startup: the server must be able to
+    // start and enumerate its tools with no env set so registries can introspect
+    // it. This is the first point where they are actually needed.
+    const missing = missingCredentials(this.cfg);
+    if (missing.length > 0) throw new ConfigError(missingCredentialsMessage(missing));
     if (this.accessToken && Date.now() < this.expiresAt - SKEW_MS) return this.accessToken;
     const resp = await this.fetchImpl(TOKEN_URL, {
       method: "POST",

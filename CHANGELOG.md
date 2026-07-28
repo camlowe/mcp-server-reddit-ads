@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.4 (2026-07-28)
+
+- The server no longer exits when credentials are missing. It starts, registers its tools, and warns loudly on stderr; the error now surfaces on the first call that needs the API, naming the same env vars and pointing at the `auth` command. Registries and directories spawn a server with no environment to enumerate its tools, and exiting there meant never being listed. An invalid `REDDIT_ADS_WRITE_TIER` is still fatal, since silently falling back to read would hide a typo from an operator who believes writes are on.
+- The Dockerfile no longer sets placeholder credentials, which are unnecessary now that startup does not require them.
+
 ## 0.5.3 (2026-07-28)
 
 - Fixed the version reported to MCP clients. It was hardcoded to `0.4.0` and had not moved for three releases, so every client saw the wrong version on `initialize`. It now reads from `package.json`, with a test pinning the two together so it cannot drift again.
